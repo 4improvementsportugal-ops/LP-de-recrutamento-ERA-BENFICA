@@ -897,7 +897,9 @@ footer{
 <script>
 /* ============ CONFIG ============ */
 // Substitui pelo Pixel ID real do cliente antes de publicar a campanha.
-var META_PIXEL_ID = "SUBSTITUIR_PELO_PIXEL_ID";
+var META_PIXEL_ID = "1082033214168900";
+// Webhook GoHighLevel (inbound webhook trigger) — recebe os dados do formulário em JSON.
+var WEBHOOK_URL = "https://services.leadconnectorhq.com/hooks/Z03SuJgTiGe7tGyRqQxC/webhook-trigger/U1CkWZLOMy94pvK2VtBt";
 
 /* ============ COOKIE CONSENT + META PIXEL ============ */
 (function(){
@@ -931,9 +933,9 @@ var META_PIXEL_ID = "SUBSTITUIR_PELO_PIXEL_ID";
     banner.classList.remove('show');
   });
 
-  window.__firePixelLead = function(){
+  window.__firePixelLead = function(eventId){
     if(typeof fbq === 'function'){
-      fbq('track', 'Lead');
+      fbq('track', 'Lead', {content_name: 'Ebook Recrutamento ERA Benfica'}, eventId ? {eventID: eventId} : undefined);
     }
   };
 })();
@@ -979,8 +981,37 @@ var META_PIXEL_ID = "SUBSTITUIR_PELO_PIXEL_ID";
 
     if(!valid) return;
 
+    var eventId = 'lead_' + Date.now() + '_' + Math.random().toString(36).slice(2,10);
+    var partes = nome.split(/s+/);
+    var payload = {
+      name: nome,
+      first_name: partes[0] || '',
+      last_name: partes.slice(1).join(' '),
+      email: email,
+      phone: telefone,
+      consentimento_rgpd: consentimento ? 'sim' : 'nao',
+      origem: 'LP Recrutamento ERA Benfica',
+      lead_magnet: 'Ebook - O que ninguem te diz antes de entrares no imobiliario',
+      pagina_url: window.location.href,
+      event_id: eventId,
+      timestamp: new Date().toISOString()
+    };
+
+    try{ sessionStorage.setItem('era_benfica_lead', JSON.stringify({nome: nome, email: email, telefone: telefone})); }catch(err){}
+
+    if(WEBHOOK_URL){
+      try{
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function(){});
+      }catch(err){}
+    }
+
     if(typeof window.__firePixelLead === 'function'){
-      window.__firePixelLead();
+      window.__firePixelLead(eventId);
     }
 
     form.style.display = 'none';
