@@ -982,7 +982,7 @@ var WEBHOOK_URL = "https://services.leadconnectorhq.com/hooks/Z03SuJgTiGe7tGyRqQ
     if(!valid) return;
 
     var eventId = 'lead_' + Date.now() + '_' + Math.random().toString(36).slice(2,10);
-    var partes = nome.split(/s+/);
+    var partes = nome.split(/\s+/);
     var payload = {
       name: nome,
       first_name: partes[0] || '',
